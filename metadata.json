@@ -1,0 +1,8 @@
+{
+  "name": "VartaSphere",
+  "description": "A modern, AI-enhanced real-time communication platform featuring private messaging hubs and community-driven global chat rooms.",
+  "requestFramePermissions": [
+    "camera",
+    "microphone"
+  ]
+}
