@@ -2,6 +2,7 @@
 import json
 import time
 from dataclasses import asdict
+from js import window
 from bus import bus
 
 class DiscoveryService:
@@ -13,19 +14,23 @@ class DiscoveryService:
         rid = data.get("roomId")
         if rid != "varta_global_signaling": return
         try:
-            from main import app # Delayed import to avoid circular dependency
+            app = window.app
+            if not app or not app.user: return
+            
             sig = json.loads(data.get("content", "{}"))
             user = app.user
+            
             if sig.get("type") == "PING" and sig.get("targetId") == user.id:
                 self.send_sig({"type": "PONG", "identity": asdict(user), "targetId": sig.get("senderId")})
             elif sig.get("type") == "PONG" and sig.get("targetId") == user.id:
                 bus.publish("NODE_FOUND", sig.get("identity"))
             elif sig.get("type") == "INVITE" and sig.get("targetId") == user.id:
                 bus.publish("INVITE_RCVD", sig.get("room"))
-        except: pass
+        except Exception:
+            pass
 
     def send_sig(self, payload):
-        from main import app
+        app = window.app
         self.network.emit_remote("send_message", {
             "roomId": "varta_global_signaling",
             "senderId": app.user.id,
@@ -34,5 +39,4 @@ class DiscoveryService:
         })
 
     def probe(self, target_id):
-        from main import app
-        self.send_sig({"type": "PING", "senderId": app.user.id, "targetId": target_id})
+        self.send_sig({"type": "PING", "senderId": window.app.user.id, "targetId": target_id})

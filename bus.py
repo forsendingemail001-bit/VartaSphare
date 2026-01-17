@@ -1,6 +1,6 @@
 
 import asyncio
-from typing import Dict, List, Callable
+from typing import Dict, List, Callable, Any
 from js import console
 
 class ServiceMesh:
@@ -12,7 +12,7 @@ class ServiceMesh:
             self.listeners[event] = []
         self.listeners[event].append(callback)
 
-    def publish(self, event: str, data: any = None):
+    def publish(self, event: str, data: Any = None):
         if event in self.listeners:
             for cb in self.listeners[event]:
                 if asyncio.iscoroutinefunction(cb):
@@ -21,6 +21,6 @@ class ServiceMesh:
                     try:
                         cb(data)
                     except Exception as e:
-                        console.error(f"[ServiceMesh Fail] {event}: {str(e)}")
+                        console.error(f"[Mesh Error] {event}: {str(e)}")
 
 bus = ServiceMesh()

@@ -8,9 +8,25 @@ class NetworkService:
         self.socket = None
 
     def connect(self):
-        url = window.location.origin
-        if "localhost" in window.location.hostname and window.location.port != "3000":
-             url = f"{window.location.protocol}//{window.location.hostname}:3000"
+        hostname = window.location.hostname
+        protocol = window.location.protocol
+        port = window.location.port
+        origin = window.location.origin
+        
+        is_local = (
+            hostname == "localhost" or 
+            hostname == "127.0.0.1" or 
+            hostname.startswith("192.168.") or 
+            hostname.startswith("10.") or 
+            hostname.startswith("172.") or
+            hostname.endswith(".local")
+        )
+        
+        url = origin
+        if is_local and port and port not in ["3000"]:
+             url = f"{protocol}//{hostname}:3000"
+        
+        console.log(f"[Network] Signaling Service targeting: {url}")
         
         options = to_js({
             "transports": ["polling", "websocket"],
@@ -32,10 +48,10 @@ class NetworkService:
                 
             @self.socket.on("connect_error")
             def on_error(err):
-                console.warn(f"[Network] Connect Error: {err}")
+                console.warn(f"[Network] Connection Interruption: {err}")
                 
         except Exception as e:
-            console.error(f"[Network] Connect failed: {str(e)}")
+            console.error(f"[Network] Signaling link failed: {str(e)}")
 
     def emit_remote(self, event, data):
         if self.socket:
