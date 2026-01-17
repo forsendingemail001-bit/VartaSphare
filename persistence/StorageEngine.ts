@@ -41,6 +41,28 @@ export class StorageEngine {
     store.put(data);
   }
 
+  async delete(storeName: string, id: string): Promise<void> {
+    if (!this.db) return;
+    const tx = this.db.transaction(storeName, 'readwrite');
+    const store = tx.objectStore(storeName);
+    store.delete(id);
+  }
+
+  async clearByRoom(roomId: string): Promise<void> {
+    if (!this.db) return;
+    const tx = this.db.transaction('messages', 'readwrite');
+    const store = tx.objectStore('messages');
+    const request = store.getAll();
+    request.onsuccess = () => {
+      const messages = request.result;
+      messages.forEach((m: any) => {
+        if (m.roomId === roomId) {
+          store.delete(m.id);
+        }
+      });
+    };
+  }
+
   async getAll(storeName: string): Promise<any[]> {
     if (!this.db) return [];
     return new Promise((resolve) => {

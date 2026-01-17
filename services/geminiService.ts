@@ -2,10 +2,12 @@
 import { GoogleGenAI, Type } from "@google/genai";
 
 export class GeminiService {
-  private ai: GoogleGenAI;
-
-  constructor() {
-    this.ai = new GoogleGenAI({ apiKey: process.env.API_KEY || '' });
+  /**
+   * Helper to create a new GoogleGenAI instance for each request.
+   * This ensures we always use the most current API_KEY from the environment.
+   */
+  private getAI() {
+    return new GoogleGenAI({ apiKey: process.env.API_KEY });
   }
 
   /**
@@ -13,7 +15,8 @@ export class GeminiService {
    */
   async moderateContent(content: string) {
     try {
-      const response = await this.ai.models.generateContent({
+      const ai = this.getAI();
+      const response = await ai.models.generateContent({
         model: 'gemini-3-flash-preview',
         contents: `Analyze the following message for hate speech, extreme toxicity, or spam. Respond in JSON format.
         Message: "${content}"`,
@@ -48,7 +51,8 @@ export class GeminiService {
    */
   async generateClanAssets(prompt: string) {
     try {
-      const response = await this.ai.models.generateContent({
+      const ai = this.getAI();
+      const response = await ai.models.generateContent({
         model: 'gemini-2.5-flash-image',
         contents: {
           parts: [{ text: `High quality gaming clan banner for a group named ${prompt}. Cinematic, neon accents, futuristic.` }]

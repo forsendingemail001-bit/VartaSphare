@@ -11,7 +11,7 @@ export enum MessageSender {
 }
 
 export interface User {
-  id: string; // This will be the uid_ prefix
+  id: string; 
   name: string;
   avatar: string;
   position: string;
@@ -19,20 +19,55 @@ export interface User {
   bio: string;
 }
 
+export interface FileTransmission {
+  hash: string;
+  name: string;
+  size: number;
+  type: string;
+  progress: number;
+  status: 'seeding' | 'leeching' | 'completed' | 'paused';
+  seeds: number;
+  peers: number;
+  dataUrl?: string; 
+  thumbnail?: string; 
+}
+
+export interface CursorPos {
+  userId: string;
+  userName: string;
+  x: number;
+  y: number;
+  roomId: string;
+  color: string;
+}
+
+export interface PipState {
+  id: string;
+  type: 'image' | 'video' | 'audio' | 'file';
+  url: string;
+  title: string;
+  isVisible: boolean;
+  minimized: boolean;
+  x: number;
+  y: number;
+}
+
 export interface Message {
   id: string;
-  roomId?: string; // Routing identifier for floating windows (gid_ or dm_)
+  roomId?: string; 
   senderId: string;
   senderName: string;
+  senderAvatar?: string;
   content: string;
   timestamp: number;
-  type: 'text' | 'image' | 'video';
+  type: 'text' | 'image' | 'video' | 'file';
   mediaUrl?: string;
   isFlagged?: boolean;
+  fileMetadata?: Partial<FileTransmission>;
 }
 
 export interface ChatRoom {
-  id: string; // This will be the gid_ prefix for groups or dm_ for private
+  id: string; 
   name: string;
   description: string;
   type: 'dm' | 'group' | 'global' | 'clan';
@@ -42,17 +77,11 @@ export interface ChatRoom {
 }
 
 export interface Clan {
-  id: string; // cid_ prefix
+  id: string; 
   name: string;
   tag: string;
   leaderId: string;
   membersCount: number;
   level: number;
   banner: string;
-}
-
-export interface AIResponse {
-  isHarmful: boolean;
-  reason?: string;
-  suggestions: string[];
 }
