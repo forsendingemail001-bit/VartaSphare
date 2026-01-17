@@ -4,63 +4,98 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>VartaSphere | Communication Hub</title>
+    <title>VartaSphere | Microservice Cluster</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Orbitron:wght@400;700&display=swap" rel="stylesheet">
+    
+    <link rel="stylesheet" href="https://pyscript.net/releases/2024.1.1/core.css" />
+    <script type="module" src="https://pyscript.net/releases/2024.1.1/core.js"></script>
+
     <style>
-        body {
-            font-family: 'Inter', sans-serif;
-            background-color: #0a0a0c;
-            color: #e2e8f0;
-            overflow: hidden;
-        }
-        .gaming-font {
-            font-family: 'Orbitron', sans-serif;
-        }
-        ::-webkit-scrollbar {
-            width: 4px;
-        }
-        ::-webkit-scrollbar-track {
-            background: rgba(0,0,0,0.1);
-        }
-        ::-webkit-scrollbar-thumb {
-            background: #334155;
-            border-radius: 10px;
-        }
-        ::-webkit-scrollbar-thumb:hover {
-            background: #475569;
-        }
-        .glass-effect {
-            background: rgba(15, 23, 42, 0.8);
-            backdrop-filter: blur(12px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-        }
-        .active-tab {
-            border-bottom: 2px solid #3b82f6;
-            color: #3b82f6;
-        }
-        @keyframes message-pop {
-            0% { transform: scale(0.5) translateY(20px); opacity: 0; }
-            10% { transform: scale(1.1) translateY(0); opacity: 1; }
-            90% { transform: scale(1) translateY(0); opacity: 1; }
-            100% { transform: scale(0.9) translateY(-20px); opacity: 0; }
-        }
+        body { font-family: 'Inter', sans-serif; background-color: #050507; color: #e2e8f0; overflow: hidden; }
+        .gaming-font { font-family: 'Orbitron', sans-serif; }
+        .glass-effect { background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.05); }
+        .custom-scrollbar::-webkit-scrollbar { width: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #1e293b; border-radius: 10px; }
+        .varta-btn-primary { background: #2563eb; color: white; border: 1px solid #3b82f6; box-shadow: 0 0 15px rgba(59, 130, 246, 0.2); transition: all 0.2s; }
+        .varta-btn-primary:hover { background: #3b82f6; transform: translateY(-1px); }
+        
+        @keyframes fade-in { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .animate-fade { animation: fade-in 0.4s ease-out forwards; }
+        
+        @keyframes logo-pulse { 0%, 100% { opacity: 0.8; transform: scale(1); } 50% { opacity: 1; transform: scale(1.05); } }
+        .logo-glow { filter: drop-shadow(0 0 20px rgba(59, 130, 246, 0.3)); }
+        
+        py-script { display: none; }
+        @keyframes loading-bar { 0% { transform: translateX(-100%); } 100% { transform: translateX(200%); } }
     </style>
-<script type="importmap">
-{
-  "imports": {
-    "react/": "https://esm.sh/react@^19.2.3/",
-    "react": "https://esm.sh/react@^19.2.3",
-    "react-dom/": "https://esm.sh/react-dom@^19.2.3/",
-    "@google/genai": "https://esm.sh/@google/genai@^1.35.0",
-    "socket.io-client": "https://esm.sh/socket.io-client@^4.8.1"
-  }
-}
-</script>
+    
+    <script type="importmap">
+    {
+      "imports": {
+        "socket.io-client": "https://esm.sh/socket.io-client@^4.8.1",
+        "@google/genai": "https://esm.sh/@google/genai@^1.35.0"
+      }
+    }
+    </script>
+    <script type="module">
+        import { GoogleGenAI } from "@google/genai";
+        import { io } from "socket.io-client";
+        window.GoogleGenAI = GoogleGenAI;
+        window.io = io;
+    </script>
 </head>
-<body>
-    <div id="root"></div>
+<body class="h-screen w-screen flex flex-col overflow-hidden">
+    <!-- Boot Screen -->
+    <div id="boot-screen" class="fixed inset-0 z-[1000] bg-[#050507] flex flex-col items-center justify-center space-y-8">
+        <div class="relative flex flex-col items-center">
+            <img src="Varta.png" alt="VartaSphere" class="w-48 h-auto logo-glow animate-[logo-pulse_3s_infinite_ease-in-out]">
+            <div class="mt-8 w-64 h-1 bg-slate-900 rounded-full overflow-hidden">
+                <div class="h-full bg-blue-500 animate-[loading-bar_2s_infinite_ease-in-out]" style="width: 30%;"></div>
+            </div>
+        </div>
+        <div class="flex flex-col items-center">
+            <p class="gaming-font text-blue-500 text-[10px] tracking-[0.6em] uppercase mb-2">VartaSphere Kernel v3.2</p>
+            <p id="boot-status" class="text-slate-600 text-[8px] uppercase tracking-widest font-bold">Mounting Filesystem...</p>
+        </div>
+    </div>
+
+    <!-- App Shell -->
+    <div id="app-shell" class="hidden h-full w-full flex flex-col opacity-0 transition-opacity duration-700">
+        <nav id="navbar-container" class="h-16 flex-shrink-0 glass-effect border-b border-white/5 flex items-center justify-between px-6 z-50"></nav>
+        <div class="flex flex-grow overflow-hidden">
+            <aside id="sidebar-container" class="w-80 flex-shrink-0 border-r border-slate-800 bg-black/20 flex flex-col"></aside>
+            <main id="main-container" class="flex-grow flex flex-col bg-[#08080a] relative overflow-hidden">
+                <div id="chat-view" class="h-full flex flex-col hidden">
+                    <div id="chat-header" class="h-16 flex-shrink-0 border-b border-slate-800 px-6 flex items-center justify-between bg-black/20"></div>
+                    <div id="message-container" class="flex-grow overflow-y-auto p-6 space-y-4 custom-scrollbar"></div>
+                    <div id="chat-input-area" class="p-4 border-t border-slate-800 bg-black/40"></div>
+                </div>
+                <div id="hub-view" class="h-full flex flex-col hidden overflow-y-auto p-8 custom-scrollbar"></div>
+                <div id="profile-view" class="h-full flex flex-col hidden items-center justify-center p-8 overflow-y-auto"></div>
+                <div id="floating-container" class="absolute inset-0 pointer-events-none z-20 overflow-hidden"></div>
+            </main>
+        </div>
+        <footer id="footer-container" class="h-10 flex-shrink-0 bg-[#050507] border-t border-slate-800 flex items-center justify-between px-4 z-50"></footer>
+    </div>
+
+    <div id="login-view" class="hidden fixed inset-0 z-[500] bg-[#050507] flex items-center justify-center p-6"></div>
+    <div id="modal-container" class="hidden fixed inset-0 z-[1000] bg-black/80 backdrop-blur-sm flex items-center justify-center p-6"></div>
+
+    <!-- PyScript Microservice Cluster Configuration -->
+    <script type="py" src="./main.py" config='{
+        "packages": ["micropip"],
+        "files": {
+            "bus.py": "./bus.py",
+            "models.py": "./models.py",
+            "network_service.py": "./network_service.py",
+            "messaging_service.py": "./messaging_service.py",
+            "discovery_service.py": "./discovery_service.py",
+            "ai_service.py": "./ai_service.py",
+            "ui_service.py": "./ui_service.py"
+        }
+    }'></script>
 </body>
 </html>
